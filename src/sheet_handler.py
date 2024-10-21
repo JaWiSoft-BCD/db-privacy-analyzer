@@ -59,10 +59,10 @@ class ExcelGenerator:
 
             # Create Excel writer object
             with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
-                self._create_summary_sheet(ai_analysis, writer)
+                # self._create_summary_sheet(ai_analysis, writer)
                 self._create_detailed_analysis_sheet(ai_analysis, writer)
-                self._create_privacy_impact_sheet(ai_analysis, writer)
-                self._create_recommendations_sheet(ai_analysis, writer)
+                # self._create_privacy_impact_sheet(ai_analysis, writer)
+                # self._create_recommendations_sheet(ai_analysis, writer)
 
                 # Apply styling to all sheets
                 for sheet_name in writer.sheets:
@@ -116,14 +116,17 @@ class ExcelGenerator:
         detailed_data = []
         
         for item in ai_analysis:
-            detailed_data.append({
-                'Table': item.get('table_name', ''),
-                'Column': item.get('column_name', ''),
-                'Data Category': item.get('data_category', ''),
-                'Risk Level': item.get('risk_level', ''),
-                'Privacy Impact': item.get('privacy_impact', ''),
-                'Recommended Action': item.get('recommended_action', '')
-            })
+            for column_item in item["column_report"]:
+                detailed_data.append({
+                    'Table': item.get('table_name', ''),
+                    'Column': column_item.get('column', ''),
+                    'Description': column_item.get('description', ''),
+                    'Type': column_item.get('type', ''),
+                    'Collection': column_item.get('collection', ''),
+                    'Gathered From': column_item.get('gathered-from', ''),
+                    'Purpose': column_item.get('purpose', ''),
+                    'Legal Basis': column_item.get('legal-basis', ''),
+                })
 
         df_detailed = pd.DataFrame(detailed_data)
         df_detailed.to_excel(writer, sheet_name='Detailed Analysis', index=False)

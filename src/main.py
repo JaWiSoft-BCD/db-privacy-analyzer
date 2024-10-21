@@ -1,4 +1,5 @@
 import logging
+import time
 from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime
@@ -46,12 +47,13 @@ class PrivacyAnalyzer:
         """Initialize all component classes."""
         try:
             database_name = self.config['DB_DATABASE']
-            database_user = self.config['DB_USE']
+            database_user = self.config['DB_USER']
             database_pw = self.config['DB_PASSWORD']
             database_host = self.config['DB_HOST']
             self.db_connector = DatabaseConnector(database_user, database_pw, database_host, database_name)
             self.schema_analyzer = SchemaAnalyzer(self.db_connector)
             self.ai_classifier = GeminiClient(api_key=self.config['GEMINI_API_KEY'])
+            self.ai_classifier.connect()
             self.excel_generator = ExcelGenerator()
         except Exception as e:
             self.logger.error(f"Error setting up components: {str(e)}")
@@ -66,7 +68,7 @@ class PrivacyAnalyzer:
             self.logger.info("Starting database analysis")
             
             # Use provided database name or from config
-            db_name = database_name or self.config['database']['database']
+            # db_name = database_name or self.config['database']['database']
             
             # Step 1: Extract schema information
             self.logger.info("Extracting database schema")
@@ -78,10 +80,10 @@ class PrivacyAnalyzer:
             
             # Step 3: Generate Excel report
             self.logger.info("Generating Excel report")
-            report_path = self.excel_generator.generate_report(ai_analysis, db_name)
+            report_path = self.excel_generator.generate_report(ai_analysis, self.db_connector.database_name)
             
-            self.logger.info(f"Analysis completed successfully. Report generated at: {report_path}")
-            return report_path
+            #self.logger.info(f"Analysis completed successfully. Report generated at: {report_path}")
+            # return report_path
             
         except Exception as e:
             self.logger.error(f"Error during analysis: {str(e)}")
@@ -94,27 +96,16 @@ class PrivacyAnalyzer:
         for table in schema_info['tables']:
             table_name = table['table_name']
             
-            for column in table['columns']:
-                # Prepare context for AI analysis
-                context = {
+            # Get AI classification
+            classification = self.ai_classifier.analyze_table_schema_data(table)
+            
+            # Add to results
+            if classification:
+                ai_results.append({
                     "table_name": table_name,
-                    "column_name": column['name'],
-                    "data_type": column['data_type'],
-                    "is_nullable": column['is_nullable'],
-                    "column_comment": column['comment'],
-                    "relationships": self._find_relationships(table['relationships'], column['name'])
-                }
-                
-                # Get AI classification
-                classification = self.ai_classifier.classify_column(context)
-                
-                # Add to results
-                if classification:
-                    ai_results.append({
-                        "table_name": table_name,
-                        "column_name": column['name'],
-                        **classification
-                    })
+                    "column_report": classification
+                })
+            time.sleep(3.5)
         
         return ai_results
 

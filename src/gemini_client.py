@@ -54,14 +54,13 @@ class GeminiClient:
             {table_schema}
 
             ANALYSIS REQUIREMENTS:
-            Provide a privacy and terms of use assessment of each column in the INPUT DATA above in the following strict format:
+            Provide a privacy and terms of use assessment of each colums and all columns in the INPUT DATA above in the following strict format for each column:
 
-            table: <name of table>
-            <new line><then for each column>
-            column: <name of column>
-            description: <description of the column maximum 15 words. no special characters>
+            Column: <name of column>
+            Description: <description of the column maximum 15 words. no special characters>
             Type: <Required or Optional>
             Collection method: <Determine if the value in the column is USER PROVIDED or USAGE GENERATED or SET BY SYSTEM or THRIRD PARTY or OTHER>
+            Gathered from: <Determine if the data is collected from ALL or VISITORS or REGISTRED USERS or THIRD PARTY or OTHER>
             Primary Purpose: <single line description maximum 20 words. no special characters><.>
             Legal basis: <10 words describing what the legal basis would be for collecting the information>
             <new line>
@@ -113,12 +112,6 @@ class GeminiClient:
             
         Returns:
             Dictionary containing parsed analysis fields
-            column: <name of column>
-            description: <description of the column maximum 15 words. no special characters>
-            Type: <Required or Optional>
-            Collection method: <Determine if the value in the column is USER PROVIDED or USAGE GENERATED or SET BY SYSTEM or THRIRD PARTY or OTHER>
-            Primary Purpose: <single line description maximum 20 words. no special characters><.>
-            Legal basis:
         """
         # Initialize default values
         parsed = {
@@ -126,8 +119,9 @@ class GeminiClient:
             'description': '',
             'type': '',
             'collection': '',
+            'gathered-from': "",
             'purpose': '',
-            'legal basis': ''
+            'legal-basis': ''
         }
 
         parsed_dictionaries = []
@@ -147,14 +141,17 @@ class GeminiClient:
             elif 'type' in lower_line and ':' in line:
                 current_field = 'type'
                 parsed[current_field] = line.split(':', 1)[1].strip()
-            elif 'purpose' in lower_line and ':' in line:
-                current_field = 'purpose'
-                parsed[current_field] = line.split(':', 1)[1].strip()
             elif 'collection' in lower_line and ':' in line:
                 current_field = 'collection'
                 parsed[current_field] = line.split(':', 1)[1].strip()
+            elif 'gathered' in lower_line and ':' in line:
+                current_field = 'gathered-from'
+                parsed[current_field] = line.split(':', 1)[1].strip()
+            elif 'purpose' in lower_line and ':' in line:
+                current_field = 'purpose'
+                parsed[current_field] = line.split(':', 1)[1].strip()
             elif 'legal basis' in lower_line and ':' in line:
-                current_field = 'legal basis'
+                current_field = 'legal-basis'
                 parsed[current_field] = line.split(':', 1)[1].strip()
                 parsed_dictionaries.append(parsed)
                 parsed = {
@@ -162,8 +159,9 @@ class GeminiClient:
                     'description': '',
                     'type': '',
                     'collection': '',
+                    'gathered-from': "",
                     'purpose': '',
-                    'legal basis': ''
+                    'legal-basis': ''
                 }
 
 
