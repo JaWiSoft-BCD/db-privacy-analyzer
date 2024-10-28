@@ -123,9 +123,11 @@ class ExcelGenerator:
                     'Description': column_item.get('description', ''),
                     'Type': column_item.get('type', ''),
                     'Collection': column_item.get('collection', ''),
-                    'Gathered From': column_item.get('gathered-from', ''),
+                    'Data Source': column_item.get('data source', ''),
                     'Purpose': column_item.get('purpose', ''),
-                    'Legal Basis': column_item.get('legal-basis', ''),
+                    'Legal Basis': column_item.get('legal basis', ''),
+                    'Personal Data': column_item.get('personal data', ''),
+                    'Personal Information' : column_item.get('personal information', ''),
                 })
 
         df_detailed = pd.DataFrame(detailed_data)

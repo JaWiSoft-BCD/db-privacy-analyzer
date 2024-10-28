@@ -105,7 +105,7 @@ class PrivacyAnalyzer:
                     "table_name": table_name,
                     "column_report": classification
                 })
-            time.sleep(3.5)
+            time.sleep(3.9)
         
         return ai_results
 

@@ -48,47 +48,72 @@ class GeminiClient:
         try:
 
             prompt = f"""
-            You are a Data protection and privacy expert specializing in classifying and categorizing data being collected in databases.
+            # ROLE AND CONTEXT
+            You are a Data Protection and Privacy Analysis Assistant with expertise in:
+            - General Data Protection Regulation of the European Union (GDPR) compliance analysis
+            - Protection of Personal Information Act (POPIA) (South Africa) requirements
+            - Database structure evaluation
+            - Privacy policy development
+            - Data classification
+
+            Note: Your analysis serves as preliminary guidance and should be reviewed by qualified legal counsel.
             
             INPUT DATA IN PYTHON LIST FORMAT:
             {table_schema}
 
-            ANALYSIS REQUIREMENTS:
-            Provide a privacy and terms of use assessment of each colums and all columns in the INPUT DATA above in the following strict format for each column:
+            # OUTPUT REQUIREMENTS: 
+            
+            ## Required Fields and format te output MUST be in:
+            For each column analyze and provide:
 
-            Column: <name of column>
-            Description: <description of the column maximum 15 words. no special characters>
-            Type: <Required or Optional>
-            Collection method: <Determine if the value in the column is USER PROVIDED or USAGE GENERATED or SET BY SYSTEM or THRIRD PARTY or OTHER>
-            Gathered from: <Determine if the data is collected from ALL or VISITORS or REGISTRED USERS or THIRD PARTY or OTHER>
-            Primary Purpose: <single line description maximum 20 words. no special characters><.>
-            Legal basis: <10 words describing what the legal basis would be for collecting the information>
-            <new line>
+            Column: [column name]
+            Description: [clear description of the data being stored in the column max 100 words]
+            Type: [Required/Optional]
+            Collection Method: [USER_PROVIDED/USER_USAGE_GENERATED/SYSTEM_USAGE_GENERATED/SYSTEM_SET/THIRD_PARTY]
+            Data Source: [ALL/VISITORS/REGISTERED_USERS/THIRD_PARTY]
+            Primary Purpose: [clear purpose as to why the data is being gathered max 100 words]
+            Legal Basis: [relevant GDPR/POPIA basis max 50 words]
+            Personal Data: [Yes/No (in reference to GDPR)]
+            Personal Information: [Yes/No (in reference to POPIA)]
 
-            CRITICAL FORMAT RULES:
-            1. Do not use any commas periods or special characters
-            2. Each field must be on a new line
-            3. Use exact field names as shown above
-            4. Keep all responses within specified word limits
-            5. Maintain consistent capitalization of field names
-            6. Use hyphens instead of commas or periods for separation
-            7. Ensure each field has exactly one colon followed by a space
-            8. Do not include any additional formatting or explanations
+            ## Formatting Rules
+            1. Each field must start on a new line.
+            2. No line breaks within field values
+            3. Use exact field names as defined in the INPUT DATA.
+            4. One colon after each field name followed by single space
+            5. No special characters (commas etc)
+            6. Use periods or hyphens for separation where needed.
+            7. Maintain consistent capitalization
+            8. No additional explanations or formatting
 
-            ANALYSIS GUIDELINES:
-            - Base your column description on:
-            * Known tables from common CMS and LMS.
-            * Other Columns you see that might be in relation.
-            - Base your legal basis on:
-            * GDPR
-            * POPI Act South Africa
+            ## Analysis Guidelines
 
-            Your response must be directly parseable by the following format indicators:
-            - Line starts with field name followed by colon
-            - Single space after colon
-            - No line breaks within fields
-            - No extra whitespace
-            - No additional formatting
+            ### Description Guidelines
+            - Reference common CMS/LMS table structures such as Wordpress and Moodle
+            - Consider relationships with other visible columns and table name
+            - Be specific and concise
+            - Focus on data content where possible and not technical aspects
+
+            ### Legal Classification Guidelines
+            Base analysis on:
+            - GDPR Article 4 definition of personal data
+            - POPIA Chapter 1 definition of personal information
+            - Purpose limitation principles
+            - Data minimization requirements
+
+            ### Purpose Guidelines
+            - Link to legitimate business functions
+            - Demonstrate necessity
+            - Show proportionality
+            - Identify specific use cases
+
+            ## OUTPUT VALIDATION
+            Your response must:
+            1. Be directly parseable using field name patterns
+            2. Contain all required fields
+            3. Follow exact formatting rules
+            4. Stay within word limits
+            5. Use only allowed values for categorical fields
             """
             response = self.modle.generate_content(prompt)
             analysis = response.text
@@ -119,9 +144,11 @@ class GeminiClient:
             'description': '',
             'type': '',
             'collection': '',
-            'gathered-from': "",
+            'data source': '',
             'purpose': '',
-            'legal-basis': ''
+            'legal basis': '',
+            'personal data' : "",
+            'personal information': ""
         }
 
         parsed_dictionaries = []
@@ -144,14 +171,20 @@ class GeminiClient:
             elif 'collection' in lower_line and ':' in line:
                 current_field = 'collection'
                 parsed[current_field] = line.split(':', 1)[1].strip()
-            elif 'gathered' in lower_line and ':' in line:
-                current_field = 'gathered-from'
+            elif 'data source' in lower_line and ':' in line:
+                current_field = 'data source'
                 parsed[current_field] = line.split(':', 1)[1].strip()
             elif 'purpose' in lower_line and ':' in line:
                 current_field = 'purpose'
                 parsed[current_field] = line.split(':', 1)[1].strip()
             elif 'legal basis' in lower_line and ':' in line:
-                current_field = 'legal-basis'
+                current_field = 'legal basis'
+                parsed[current_field] = line.split(':', 1)[1].strip()
+            elif 'personal data' in lower_line and ':' in line:
+                current_field = 'personal data'
+                parsed[current_field] = line.split(':', 1)[1].strip()
+            elif 'personal information' in lower_line and ':' in line:
+                current_field = 'personal information'
                 parsed[current_field] = line.split(':', 1)[1].strip()
                 parsed_dictionaries.append(parsed)
                 parsed = {
@@ -159,10 +192,11 @@ class GeminiClient:
                     'description': '',
                     'type': '',
                     'collection': '',
-                    'gathered-from': "",
+                    'data source': '',
                     'purpose': '',
-                    'legal-basis': ''
+                    'legal basis': '',
+                    'personal data': '',
+                    'personal information': ''
                 }
-
 
         return parsed_dictionaries
