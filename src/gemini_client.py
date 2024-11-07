@@ -67,12 +67,12 @@ class GeminiClient:
             For each column analyze and provide:
 
             Column: [column name]
-            Description: [clear description of the data being stored in the column max 100 words]
-            Type: [Required/Optional]
+            Description: [clear description of the data being stored in the column, max 100 words]
+            Data Type: [Required/Optional]
             Collection Method: [USER_PROVIDED/USER_USAGE_GENERATED/SYSTEM_USAGE_GENERATED/SYSTEM_SET/THIRD_PARTY]
             Data Source: [ALL/VISITORS/REGISTERED_USERS/THIRD_PARTY]
-            Primary Purpose: [clear purpose as to why the data is being gathered max 100 words]
-            Legal Basis: [relevant GDPR/POPIA basis max 50 words]
+            Primary Purpose: [clear purpose as to why the data is being gathered, max 100 words]
+            Legal Basis: [relevant GDPR/POPIA basis, max 50 words]
             Personal Data: [Yes/No (in reference to GDPR)]
             Personal Information: [Yes/No (in reference to POPIA)]
 
@@ -130,73 +130,29 @@ class GeminiClient:
 
     def _parse_analysis(self, analysis: str) -> Dict:
         """
-        Parse Gemini's analysis into structured fields.
+        Parse the analysis text into a list of dictionaries, where each dictionary
+        represents the analysis for a single column.
         
         Args:
-            analysis: Raw analysis text from Gemini
+            analysis: Raw analysis text from the model.
             
         Returns:
-            Dictionary containing parsed analysis fields
+            List of dictionaries containing the parsed analysis for each column.
         """
-        # Initialize default values
-        parsed = {
-            'column': '',
-            'description': '',
-            'type': '',
-            'collection': '',
-            'data source': '',
-            'purpose': '',
-            'legal basis': '',
-            'personal data' : "",
-            'personal information': ""
-        }
-
-        parsed_dictionaries = []
-
-        # Simple parsing based on field markers
-        current_field = None
-        for line in analysis.split('\n'):
-            line = line.strip()
-            lower_line = line.lower()
-
-            if 'column' in lower_line and ':' in line:
-                current_field = 'column'
-                parsed[current_field] = line.split(':', 1)[1].strip()
-            elif 'description' in lower_line and ':' in line:
-                current_field = 'description'
-                parsed[current_field] = line.split(':', 1)[1].strip()
-            elif 'type' in lower_line and ':' in line:
-                current_field = 'type'
-                parsed[current_field] = line.split(':', 1)[1].strip()
-            elif 'collection' in lower_line and ':' in line:
-                current_field = 'collection'
-                parsed[current_field] = line.split(':', 1)[1].strip()
-            elif 'data source' in lower_line and ':' in line:
-                current_field = 'data source'
-                parsed[current_field] = line.split(':', 1)[1].strip()
-            elif 'purpose' in lower_line and ':' in line:
-                current_field = 'purpose'
-                parsed[current_field] = line.split(':', 1)[1].strip()
-            elif 'legal basis' in lower_line and ':' in line:
-                current_field = 'legal basis'
-                parsed[current_field] = line.split(':', 1)[1].strip()
-            elif 'personal data' in lower_line and ':' in line:
-                current_field = 'personal data'
-                parsed[current_field] = line.split(':', 1)[1].strip()
-            elif 'personal information' in lower_line and ':' in line:
-                current_field = 'personal information'
-                parsed[current_field] = line.split(':', 1)[1].strip()
-                parsed_dictionaries.append(parsed)
-                parsed = {
-                    'column': '',
-                    'description': '',
-                    'type': '',
-                    'collection': '',
-                    'data source': '',
-                    'purpose': '',
-                    'legal basis': '',
-                    'personal data': '',
-                    'personal information': ''
-                }
-
-        return parsed_dictionaries
+        parsed_analyses = []
+        
+        for column_analysis in analysis.split('\n\n'):
+            column_analysis = column_analysis.strip()
+            if not column_analysis:
+                continue
+            
+            parsed_analysis = {}
+            for line in column_analysis.split('\n'):
+                field, value = line.split(': ', 1)
+                field = field.strip()
+                value = value.strip()
+                parsed_analysis[field] = value
+            
+            parsed_analyses.append(parsed_analysis)
+        
+        return parsed_analyses
