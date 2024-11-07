@@ -4,6 +4,7 @@ import pandas as pd
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from pathlib import Path
+from utils import append_to_file
 import logging
 from dataclasses import dataclass
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
@@ -112,23 +113,42 @@ class ExcelGenerator:
         df_summary.to_excel(writer, sheet_name='Summary', index=False)
 
     def _create_detailed_analysis_sheet(self, ai_analysis: List[Dict[str, Any]], writer: pd.ExcelWriter):
-        """Create detailed analysis sheet with all findings."""
+        """
+        Create a detailed analysis sheet with all findings.
+
+        Args:
+            ai_analysis (List[Dict[str, Any]]): The AI analysis output, where each dict represents the analysis for a table.
+            writer (pd.ExcelWriter): The ExcelWriter instance to write the sheet to.
+
+        Raises:
+            ValueError: If a required field is missing from the AI analysis output.
+        """
         detailed_data = []
-        
+        # Define the required fields and their default values
+        required_fields = {
+            'Column': '',
+            'Description': '',
+            'Data Type': '',
+            'Collection Method': '',
+            'Data Source': '',
+            'Primary Purpose': '',
+            'Legal Basis': '',
+            'Personal Data': '',
+            'Personal Information': ''
+        }
+
         for item in ai_analysis:
+            table = item.get('table_name', '')
             for column_item in item["column_report"]:
-                detailed_data.append({
-                    'Table': item.get('table_name', ''),
-                    'Column': column_item.get('column', ''),
-                    'Description': column_item.get('description', ''),
-                    'Type': column_item.get('type', ''),
-                    'Collection': column_item.get('collection', ''),
-                    'Data Source': column_item.get('data source', ''),
-                    'Purpose': column_item.get('purpose', ''),
-                    'Legal Basis': column_item.get('legal basis', ''),
-                    'Personal Data': column_item.get('personal data', ''),
-                    'Personal Information' : column_item.get('personal information', ''),
-                })
+                row_data = {}
+                row_data['Table'] = table
+                for field, default_value in required_fields.items():
+                    value = column_item.get(field, default_value)
+                    if value is None:
+                        append_to_file("Ai Analysis errors.txt", f"Required field '{field}' for table: {table} is missing from the AI analysis output.")
+                        print(f"Required field '{field}' for table: {table} is missing from the AI analysis output.")
+                    row_data[field] = value
+                detailed_data.append(row_data)
 
         df_detailed = pd.DataFrame(detailed_data)
         df_detailed.to_excel(writer, sheet_name='Detailed Analysis', index=False)
