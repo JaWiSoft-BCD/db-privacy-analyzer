@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime
+from utils import progress_tracker, append_to_file
 from config import ConfigHandler
 from db_handler import DatabaseConnector
 from db_schema_analyzer import SchemaAnalyzer
@@ -92,8 +93,11 @@ class PrivacyAnalyzer:
     def _process_schema_with_ai(self, schema_info: Dict[str, Any]) -> list:
         """Process schema information with AI classifier."""
         ai_results = []
-        
-        for table in schema_info['tables']:
+        # For tracking purposes
+        tables = schema_info['tables']
+        total_tables = len(tables)
+        # Now going through & keeping track
+        for table_pos, table in enumerate(tables):
             table_name = table['table_name']
             
             # Get AI classification
@@ -105,6 +109,9 @@ class PrivacyAnalyzer:
                     "table_name": table_name,
                     "column_report": classification
                 })
+            else:
+                append_to_file("Ai Analysis errors.txt", f"Did not do classification on {str(schema_info)}. Tables total: {str(total_tables)}")
+            progress_tracker(total_tables, table_pos+1)
             time.sleep(3.9)
         
         return ai_results
